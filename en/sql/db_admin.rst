@@ -3,7 +3,7 @@
 :meta-description: This chapter covers CUBRID User Management, SET system parameters and user variables, KILL command and SHOW statements.
 
 ***********************
-Database Administration
+Data Control Statements
 ***********************
 
 .. toctree::

@@ -2,7 +2,7 @@
 :meta-keywords: cubrid databases.txt, cubrid users, cubrid volume
 :meta-description: How to manage CUBRID Databases, Users and Volumes.
 
-Database Management
+Data Control Statements
 ===================
 
 Database Users
