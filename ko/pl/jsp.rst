@@ -2,30 +2,6 @@
 :meta-keywords: cubrid jsp, loadjava utility
 :meta-description: CUBRID supports to develop stored functions and procedures in Java. Java stored functions/procedures are executed on the JVM (Java Virtual Machine) hosted by CUBRID.
 
-***********************
-Java 저장 함수/프로시저
-***********************
-
-.. _jsp-introduction:
-
-Java 저장 함수/프로시저 소개
-==============================================
-
-저장 함수와 저장 프로시저를 사용하면 SQL로 구현하지 못하는 복잡한 프로그램의 로직을 구현할 수 있으며, 사용자가 보다 쉽게 데이터를 조작하게 할 수 있다. 함수와 프로시저는 데이터를 조작하기 위해 실행 명령의 흐름이 있고, 쉽게 조작할 수 있고, 관리할 수 있는 블록 단위라고 할 수 있다.
-
-CUBRID는 Java로 저장 함수와 프로시저를 개발할 수 있도록 지원한다. Java 저장 함수와 프로시저는 CUBRID에서 호스팅한 Java 가상 머신(JVM, Java Virtual Machine)에서 실행된다.
-
-Java 저장 함수/프로시저는 SQL에서도 호출할 수 있으며, JDBC를 사용하여 쉽게 Java 응용 프로그램에서 호출할 수 있다.
-
-Java 저장 함수/프로시저를 사용할 때 얻을 수 있는 이점은 다음과 같다.
-
-*   **생산성과 사용성**: Java 저장 함수/프로시저는 한번 만들어 놓으면 계속해서 사용할 수 있다. 사용자가 저장 함수와 저장 프로시저를 SQL에서도 호출하여 사용할 수 있고, JDBC를 사용하여 쉽게 Java 응용 프로그램에서 호출할 수 있다.
-*   **뛰어난 상호 운용성과 이식성**: Java 저장 함수/프로시저는 Java 가상 머신을 사용하므로, 시스템에 Java 가상 머신을 사용할 수만 있다면 언제 어디서나 사용할 수 있다.
-
-.. note::
-
-    *   Java를 제외한 다른 언어에서는 저장 함수/프로시저를 지원하지 않는다. CUBRID에서 저장 함수/프로시저는 오직 Java로만 구현 가능하다.
-
 .. _jsp-prerequisites:
 
 기능 사용을 위한 준비
