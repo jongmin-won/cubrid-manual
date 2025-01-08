@@ -2,7 +2,7 @@
 :meta-keywords: cubrid databases.txt, cubrid users, cubrid volume
 :meta-description: How to manage CUBRID Databases, Users and Volumes.
 
-데이터 제어문
+데이터베이스 관리
 =================
 
 데이터베이스 사용자
