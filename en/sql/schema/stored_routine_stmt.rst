@@ -1,6 +1,6 @@
 
-:meta-keywords: procedure definition, create procedure, drop procedure, function definition, create function, drop function
-:meta-description: Define functions/procedures in CUBRID database using create procedure, create function, drop procedure and drop function statements.
+:meta-keywords: procedure definition, create procedure, alter procedure, drop procedure, function definition, create function, alter function, drop function
+:meta-description: Define functions/procedures in CUBRID database using create procedure, create function, alter procedure, alter function, drop procedure and drop function statements.
 
 
 ************************************************
