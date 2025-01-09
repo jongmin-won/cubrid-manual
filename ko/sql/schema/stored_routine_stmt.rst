@@ -1,6 +1,6 @@
 
-:meta-keywords: procedure definition, create procedure, drop procedure, function definition, create function, drop function
-:meta-description: Define functions/procedures in CUBRID database using create procedure, create function, drop procedure and drop function statements.
+:meta-keywords: procedure definition, create procedure, alter procedure, drop procedure, function definition, create function, alter function, drop function
+:meta-description: Define functions/procedures in CUBRID database using create procedure, create function, alter procedure, alter function, drop procedure and drop function statements.
 
 
 *************************
@@ -100,6 +100,80 @@ Java Call Specification 작성 방법에 대해서는 :ref:`call-specification`\
      'athlete_add'                   3  'event'               'STRING'              'IN'
 
 
+ALTER PROCEDURE
+==============
+
+**ALTER PROCEDURE** 문을 사용하여 저장 프로시저를 명시적으로 재컴파일할 수 있다.
+명시적 재컴파일은 암시적 런타임 재컴파일의 필요성을 없애고, 연관된 런타임 컴파일 오류와 성능 오버헤드를 방지할 수 있다.
+
+::
+
+    ALTER PROCEDURE procedure_name COMPILE;
+
+*   *procedure_name*: 재컴파일할 프로시저의 이름을 지정한다.
+
+.. note::
+
+    소유자를 변경하는 경우, 변경된 소유자로 저장 프로시저를 자동으로 재컴파일한다. 
+    소유자를 변경하기 위해서는 :ref:`ALTER … OWNER<change-owner>`\을 참고한다.
+
+다음은 COMPILE 구문을 사용하여 PL/CSQL을 재컴파일한 후 정상적으로 실행할 수 있는 예이다. 
+
+PL/CSQL에 Static SQL을 사용하는 저장 프로시저를 생성한 후 정상적으로 실행되는지 확인한다. 
+
+.. code-block:: sql
+
+    CREATE OR REPLACE PROCEDURE proc_stadium_code() AS
+      n INTEGER;
+    BEGIN
+      SELECT code INTO n FROM stadium LIMIT 1;
+      DBMS_OUTPUT.put_line('code :' || n);
+    END;
+    
+    ;server-output on
+    CALL proc_stadium_code();
+::
+    
+    Result              
+    ======================
+      NULL                
+
+    <DBMS_OUTPUT>
+    ====
+    code :30140
+
+stadium 테이블의 code 컬럼 타입을 INTEGER에서 VARCHAR로 변경한 후 저장 프로시저를 실행하면 아래와 같은 에러가 발생한다.
+
+.. code-block:: sql
+
+    ALTER TABLE public.stadium MODIFY code VARCHAR;
+
+    CALL proc_stadium_code();
+
+::
+
+    ERROR: Stored procedure execute error: 
+      (line 4, column 3) internal server error
+
+컬럼 타입 변경 정보가 기존에 컴파일된 PL/CSQL에 반영되지 않았기 때문에, 저장 프로시저를 명시적으로 재컴파일을 수행해야 정상적으로 실행할 수 있다.
+
+.. code-block:: sql
+
+    ALTER PROCEDURE proc_stadium_code COMPILE;
+
+    CALL proc_stadium_code();
+
+::
+
+    Result              
+    ======================
+      NULL                
+
+    <DBMS_OUTPUT>
+    ====
+    code :30140
+
+
 DROP PROCEDURE
 ==============
 
@@ -108,7 +182,7 @@ CUBRID에서는 등록한 저장 프로시저를 **DROP PROCEDURE** 구문을 �
 
 ::
 
-    DROP PROCEDURE procedure_name [{ , procedure_name , ... }]
+    DROP PROCEDURE procedure_name [{ , procedure_name , ... }];
 
 *   *procedure_name*: 제거할 프로시저의 이름을 지정한다.
 
@@ -208,6 +282,72 @@ Java Call Specification 작성 방법에 대해서는 :ref:`call-specification`\
     sp_name   index_of  arg_name  data_type      mode
     =================================================
      'sp_int'                        0  'i'                   'INTEGER'             'IN'
+
+
+ALTER FUNCTION
+==============
+
+**ALTER FUNCTION** 문을 사용하여 저장 함수를 명시적으로 재컴파일 할 수 있다.
+명시적 재컴파일은 암시적 런타임 재컴파일의 필요성을 없애고, 연관된 런타임 컴파일 오류와 성능 오버헤드를 방지할 수 있다.
+
+::
+
+    ALTER FUNCTION function_name COMPILE;
+
+*   *function_name*: 재컴파일할 함수의 이름을 지정한다.
+
+.. note::
+
+    소유자를 변경하는 경우, 변경된 소유자로 저장 프로시저를 자동으로 재컴파일한다.
+    소유자를 변경하기 위해서는 :ref:`ALTER … OWNER<change-owner>`\을 참고한다.
+
+다음은 COMPILE 구문을 사용하여 PL/CSQL을 재컴파일한 후 정상적으로 실행할 수 있는 예이다. 
+
+PL/CSQL에 Static SQL을 사용하는 저장 함수를 생성한 후 정상적으로 실행되는지 확인한다.
+
+.. code-block:: sql
+
+    CREATE OR REPLACE FUNCTION func_stadium_code() RETURN INTEGER AS
+      n INTEGER;
+    BEGIN
+      SELECT code INTO n FROM stadium LIMIT 1;
+      RETURN n;
+    END;
+    
+    CALL func_stadium_code();
+
+::
+    
+    Result
+    =============
+    30140
+
+stadium 테이블의 code 컬럼 타입을 INTEGER에서 VARCHAR로 변경한 후 저장 함수를 실행하면 아래와 같은 에러가 발생한다.
+
+.. code-block:: sql
+
+    ALTER TABLE public.stadium MODIFY code VARCHAR;
+
+    CALL func_stadium_code();
+
+::
+
+    ERROR: Stored procedure execute error: 
+      (line 4, column 3) internal server error
+
+컬럼 타입 변경 정보가 기존에 컴파일된 PL/CSQL에 반영되지 않았기 때문에, 저장 함수를 명시적으로 재컴파일을 수행해야 정상적으로 실행할 수 있다.
+
+.. code-block:: sql
+
+    ALTER FUNCTION func_stadium_code COMPILE;
+
+    CALL func_stadium_code();
+
+::
+    
+    Result
+    =============
+    30140
 
 
 DROP FUNCTION

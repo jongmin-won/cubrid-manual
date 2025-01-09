@@ -101,6 +101,80 @@ The **db_stored_procedure_args** system virtual table provides the information o
      'athlete_add'                   3  'event'               'STRING'              'IN'
 
 
+ALTER PROCEDURE
+==============
+
+The **ALTER PROCEDURE** statement allows you to explicitly recompile a stored procedure.
+Explicit recompilation eliminates the need for implicit runtime recompilation, preventing associated runtime compilation errors and performance overhead.
+
+::
+
+    ALTER PROCEDURE procedure_name COMPILE;
+
+*   *procedure_name*: Specifies the name of the procedure to be recompiled.
+
+.. note::
+
+    If the owner of the stored procedure is changed, the procedure will be automatically recompiled under the new owner.
+    To change the owner, refer to :ref:`ALTER … OWNER<change-owner>`\.
+
+The following is an example of how PL/CSQL can be recompiled using the COMPILE statement and then executed normally. 
+
+Create a stored procedure that uses Static SQL in PL/CSQL and check whether it runs normally.
+
+.. code-block:: sql
+
+    CREATE OR REPLACE PROCEDURE proc_stadium_code() AS
+      n INTEGER;
+    BEGIN
+      SELECT code INTO n FROM stadium LIMIT 1;
+      DBMS_OUTPUT.put_line('code :' || n);
+    END;
+    
+    ;server-output on
+    CALL proc_stadium_code();
+::
+    
+    Result              
+    ======================
+      NULL                
+
+    <DBMS_OUTPUT>
+    ====
+    code :30140
+
+After changing the code column type in the stadium table from INTEGER to VARCHAR, running the stored procedure results in the following error occurs.
+
+.. code-block:: sql
+
+    ALTER TABLE public.stadium MODIFY code VARCHAR;
+
+    CALL proc_stadium_code();
+
+::
+
+    ERROR: Stored procedure execute error: 
+      (line 4, column 3) internal server error
+
+The column type change information was not reflected in the previously compiled PL/CSQL, so the stored procedure must be explicitly recompiled to execute correctly.
+
+.. code-block:: sql
+
+    ALTER PROCEDURE proc_stadium_code COMPILE;
+
+    CALL proc_stadium_code();
+
+::
+
+    Result              
+    ======================
+      NULL                
+
+    <DBMS_OUTPUT>
+    ====
+    code :30140
+
+
 DROP PROCEDURE
 ==============
 
@@ -109,7 +183,7 @@ Also, you can delete multiple stored procedures at the same time with several *p
 
 ::
 
-    DROP PROCEDURE procedure_name [{ , procedure_name , ... }]
+    DROP PROCEDURE procedure_name [{ , procedure_name , ... }];
 
 *   *procedure_name*: Specifies the name of procedure to delete
 
@@ -209,6 +283,71 @@ The **db_stored_procedure_args** system virtual table provides the information o
     sp_name   index_of  arg_name  data_type      mode
     =================================================
      'sp_int'                        0  'i'                   'INTEGER'             'IN'
+
+
+ALTER FUNCTION
+==============
+
+The **ALTER FUNCTION** statement allows you to explicitly recompile a stored function.
+Explicit recompilation eliminates the need for implicit runtime recompilation, preventing associated runtime compilation errors and performance overhead.
+
+::
+
+    ALTER FUNCTION function_name COMPILE;
+
+*   *function_name*: Specifies the name of the function to be recompiled.
+
+.. note::
+
+    If the owner of the stored function is changed, the function will be automatically recompiled under the new owner.
+    To change the owner, refer to :ref:`ALTER … OWNER<change-owner>`\.
+
+The following is an example of how PL/CSQL can be recompiled using the COMPILE statement and then executed normally. 
+
+Create a stored function that uses Static SQL in PL/CSQL and check whether it runs normally.
+
+.. code-block:: sql
+
+    CREATE OR REPLACE FUNCTION func_stadium_code() RETURN INTEGER AS
+      n INTEGER;
+    BEGIN
+      SELECT code INTO n FROM stadium LIMIT 1;
+      RETURN n;
+    END;
+    
+    CALL func_stadium_code();
+::
+    
+    Result              
+    ======================
+    30140               
+
+After changing the code column type in the stadium table from INTEGER to VARCHAR, running the stored function results in the following error occurs.
+
+.. code-block:: sql
+
+    ALTER TABLE public.stadium MODIFY code VARCHAR;
+
+    CALL func_stadium_code();
+
+::
+
+    ERROR: Stored procedure execute error: 
+      (line 4, column 3) internal server error
+
+The column type change information was not reflected in the previously compiled PL/CSQL, so the stored function must be explicitly recompiled to execute correctly.
+
+.. code-block:: sql
+
+    ALTER FUNCTION func_stadium_code COMPILE;
+
+    CALL func_stadium_code();
+
+::
+
+    Result              
+    ======================
+    30140
 
 
 DROP FUNCTION
