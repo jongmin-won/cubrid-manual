@@ -341,7 +341,8 @@ Session Commands
 
 In addition to SQL statements, CSQL Interpreter provides special commands allowing you to control the Interpreter. These commands are called session commands. All the session commands must start with a semicolon (;).
 
-Enter the **;help** command to display a list of the session commands available in the CSQL Interpreter. Note that only the uppercase letters of each session command are required to make the CSQL Interpreter to recognize it. Session commands are not case-sensitive.
+Enter the **;help** command to display a list of the session commands available in the CSQL Interpreter.
+You don't need to type the full session command; the CSQL Interpreter recognizes commands as long as you input the minimum number of characters needed to uniquely identify the command from others. Session commands are not case-sensitive.
 
 "Query buffer" is a buffer to store the query before running it. If you run CSQL as giving the **\-\-no-single-line** option, the query string is kept on the buffer until running **;xr** command.
 
@@ -581,9 +582,9 @@ You can check the parameter value currently set in the CSQL Interpreter using th
     === Get Param Input ===
     isolation_level="tran_rep_class_commit_instance"
 
-**Setting the parameter value (;SEt)**
+**Setting the parameter value (;SET)**
 
-You can use the **;Set** session command to set a specific parameter value. Note that changeable parameter values are only can be changed. To change the server parameter values, you must have DBA authorization. For information on list of changeable parameters, see :ref:`broker-configuration`. ::
+You can use the **;SET** session command to set a specific parameter value. Note that changeable parameter values are only can be changed. To change the server parameter values, you must have DBA authorization. For information on list of changeable parameters, see :ref:`broker-configuration`. ::
 
     csql> ;set block_ddl_statement=1
     === Set Param Input ===
