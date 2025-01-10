@@ -341,7 +341,9 @@ CSQL 시작 옵션
 
 CSQL 인터프리터에는 SQL 문 이외에 CSQL 인터프리터를 제어하는 특별한 명령어가 있으며 이를 세션 명령어라고 한다. 모든 세션 명령어는 반드시 세미콜론(;)으로 시작해야 한다.
 
-**;help** 를 입력하여 CSQL 인터프리터에서 지원되는 세션 명령어를 확인할 수 있다. 세션 명령어를 전부 입력하지 않고 대문자로 표시된 글자까지만 입력해도 CSQL 인터프리터는 세션 명령어를 인식한다. 세션 명령어는 대소문자를 구분하지 않는다.
+**;help** 를 입력하여 CSQL 인터프리터에서 지원되는 세션 명령어를 확인할 수 있다.
+세션 명령어를 전부 입력하지 않고 고유한 세션 명령어를 식별할 수 있을 만큼의 최소 문자(다른 명령어와 구별하기 위한 최소 문자)만 입력해도  CSQL 인터프리터는 세션 명령어를 인식한다.
+세션 명령어는 대소문자를 구분하지 않는다.
 
 CSQL은 SQL의 문자열 리터럴, 주석, 식별자를 (참고: :ref:`작성 규칙 <lexical_rules>`) 인식하면서 동작한다. 특히,
 
@@ -621,7 +623,7 @@ CSQL 인터프리터에서 작업 중인 데이터베이스 이름 및 호스트
 
 **파라미터 값 설정(;SET)**
 
-특정 파라미터의 값을 설정하기 위해서는 **;set** 세션 명령어를 사용한다. 동적 변경이 가능한 파라미터만 값을 변경할 수 있으며, 서버 파라미터는 DBA 권한이 있어야만 값을 변경할 수 있다. 동적 변경이 가능한 파라미터 목록은 :ref:`broker-configuration` 를 참고한다. ::
+특정 파라미터의 값을 설정하기 위해서는 **;SET** 세션 명령어를 사용한다. 동적 변경이 가능한 파라미터만 값을 변경할 수 있으며, 서버 파라미터는 DBA 권한이 있어야만 값을 변경할 수 있다. 동적 변경이 가능한 파라미터 목록은 :ref:`broker-configuration` 를 참고한다. ::
 
     csql> ;set block_ddl_statement=1
     === Set Param Input ===
@@ -1402,12 +1404,18 @@ OPT LEVEL의 상세한 내용은 :ref:`viewing-query-plan`\ 를 참고한다.
     csql> ;time
     TIME IS ON
 
+.. _server-output:
+
 **서버 저장 메시지 출력(;SERver-output)**
 
 이 값을 ON으로 설정하면 서버의 DBMS_OUTPUT 버퍼에 저장된 메시지를 출력한다. 기본값은 OFF이다.
-DBMS_OUTPUT 버퍼는 주로 PL/CSQL 저장 프로시저/함수에서 DBMS_OUTPUT.put_line() 호출을 통해 쌓인 메시지들을 저장하고 있다.
-DBMS_OUTPUT 메시지들은 CSQL이 실행한 SQL 문의 결과 출력 후에 '<DBMS_OUTPUT>'  표시와 함께 출력된다.
-저장프로시스에서 오류 발생시 DBMS_OUTPUT.put_line()으로 출력한 메세지들은 실행 순서와 관계없이 에러메시지 출력 후 출력되므로 주의가 필요하다.
+DBMS_OUTPUT 버퍼는 PL/CSQL 저장 프로시저/함수에서 DBMS_OUTPUT.put_line()이나 DBMS_OUTPUT.put()
+호출을 통해 쌓인 메시지들을 저장하고 있다.
+실행한 SQL 문의 결과 출력 후에 '<DBMS_OUTPUT>' 표시 아래에 DBMS_OUTPUT 메시지들을 출력한다.
+이 때, 저장 프로시저/함수 실행 도중에 오류가 발생하면 실행문 순서와 상관없이
+에러 메시지를 포함한 CSQL의 기본 메시지들을 모두 출력한 다음 DBMS_OUTPUT 메세지들을 출력하므로 주의가 필요하다.
+예를 들어, 아래에서 DBMS_OUTPUT.put_line() 문은 ZERO_DIVIDE 예외를 일으키는 RETURN 문 이전에 실행되지만,
+출력에서는 DBMS_OUTPUT 메시지가 에러 메시지보다 나중에 위치한다.  ::
 
     csql> ;server-output on
     SERVER OUTPUT IS ON
