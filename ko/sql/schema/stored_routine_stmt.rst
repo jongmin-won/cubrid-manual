@@ -101,10 +101,10 @@ Java Call Specification 작성 방법에 대해서는 :ref:`call-specification`\
 
 
 ALTER PROCEDURE
-==============
+================
 
-**ALTER PROCEDURE** 문을 사용하여 저장 프로시저를 명시적으로 재컴파일할 수 있다.
-명시적 재컴파일은 암시적 런타임 재컴파일의 필요성을 없애고, 연관된 런타임 컴파일 오류와 성능 오버헤드를 방지할 수 있다.
+**ALTER PROCEDURE** 문을 사용하여 저장 프로시저를 재컴파일할 수 있다.
+저장 프로시저와 연관된 테이블의 스키마가 변경되더라도 자동으로 재컴파일되지 않으므로, 변경 사항을 반영하려면 사용자가 직접 재컴파일해야 한다.
 
 ::
 
@@ -117,7 +117,7 @@ ALTER PROCEDURE
     소유자를 변경하는 경우, 변경된 소유자로 저장 프로시저를 자동으로 재컴파일한다. 
     소유자를 변경하기 위해서는 :ref:`ALTER … OWNER<change-owner>`\을 참고한다.
 
-다음은 COMPILE 구문을 사용하여 PL/CSQL을 재컴파일한 후 정상적으로 실행할 수 있는 예이다. 
+다음은 테이블 스키마 변경 후 PL/CSQL을 재컴파일하여 정상적으로 실행할 수 있게 만드는 예이다.  
 
 PL/CSQL에 Static SQL을 사용하는 저장 프로시저를 생성한 후 정상적으로 실행되는지 확인한다. 
 
@@ -155,7 +155,7 @@ stadium 테이블의 code 컬럼 타입을 INTEGER에서 VARCHAR로 변경한 �
     ERROR: Stored procedure execute error: 
       (line 4, column 3) internal server error
 
-컬럼 타입 변경 정보가 기존에 컴파일된 PL/CSQL에 반영되지 않았기 때문에, 저장 프로시저를 명시적으로 재컴파일을 수행해야 정상적으로 실행할 수 있다.
+컬럼 타입 변경 정보가 기존에 컴파일된 PL/CSQL의 실행코드에 반영되지 않았기 때문에, 저장 프로시저를 재컴파일을 수행해야 정상적으로 실행할 수 있다.
 
 .. code-block:: sql
 
@@ -285,10 +285,10 @@ Java Call Specification 작성 방법에 대해서는 :ref:`call-specification`\
 
 
 ALTER FUNCTION
-==============
+===============
 
-**ALTER FUNCTION** 문을 사용하여 저장 함수를 명시적으로 재컴파일 할 수 있다.
-명시적 재컴파일은 암시적 런타임 재컴파일의 필요성을 없애고, 연관된 런타임 컴파일 오류와 성능 오버헤드를 방지할 수 있다.
+**ALTER FUNCTION** 문을 사용하여 저장 함수를 재컴파일할 수 있다.
+저장 함수와 연관된 테이블의 스키마가 변경되더라도 자동으로 재컴파일되지 않으므로, 변경 사항을 반영하려면 사용자가 직접 재컴파일해야 한다.
 
 ::
 
@@ -298,10 +298,10 @@ ALTER FUNCTION
 
 .. note::
 
-    소유자를 변경하는 경우, 변경된 소유자로 저장 프로시저를 자동으로 재컴파일한다.
+    소유자를 변경하는 경우, 변경된 소유자로 저장 함수를 자동으로 재컴파일한다.
     소유자를 변경하기 위해서는 :ref:`ALTER … OWNER<change-owner>`\을 참고한다.
 
-다음은 COMPILE 구문을 사용하여 PL/CSQL을 재컴파일한 후 정상적으로 실행할 수 있는 예이다. 
+다음은 테이블 스키마 변경 후 PL/CSQL을 재컴파일하여 정상적으로 실행할 수 있게 만드는 예이다. 
 
 PL/CSQL에 Static SQL을 사용하는 저장 함수를 생성한 후 정상적으로 실행되는지 확인한다.
 
@@ -335,7 +335,7 @@ stadium 테이블의 code 컬럼 타입을 INTEGER에서 VARCHAR로 변경한 �
     ERROR: Stored procedure execute error: 
       (line 4, column 3) internal server error
 
-컬럼 타입 변경 정보가 기존에 컴파일된 PL/CSQL에 반영되지 않았기 때문에, 저장 함수를 명시적으로 재컴파일을 수행해야 정상적으로 실행할 수 있다.
+컬럼 타입 변경 정보가 기존에 컴파일된 PL/CSQL의 실행코드에 반영되지 않았기 때문에, 저장 함수를 재컴파일을 수행해야 정상적으로 실행할 수 있다.
 
 .. code-block:: sql
 

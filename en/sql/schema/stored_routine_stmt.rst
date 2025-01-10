@@ -102,10 +102,10 @@ The **db_stored_procedure_args** system virtual table provides the information o
 
 
 ALTER PROCEDURE
-==============
+================
 
-The **ALTER PROCEDURE** statement allows you to explicitly recompile a stored procedure.
-Explicit recompilation eliminates the need for implicit runtime recompilation, preventing associated runtime compilation errors and performance overhead.
+The **ALTER PROCEDURE** statement allows you to recompile a stored procedure.
+Even if the schema of a table associated with the stored procedure changes, it is not automatically recompiled. Therefore, users must manually recompile the stored procedure to reflect the changes.
 
 ::
 
@@ -118,7 +118,7 @@ Explicit recompilation eliminates the need for implicit runtime recompilation, p
     If the owner of the stored procedure is changed, the procedure will be automatically recompiled under the new owner.
     To change the owner, refer to :ref:`ALTER … OWNER<change-owner>`\.
 
-The following is an example of how PL/CSQL can be recompiled using the COMPILE statement and then executed normally. 
+The following is an example that shows how to recompile PL/CSQL to run correctly after changing the table schema. 
 
 Create a stored procedure that uses Static SQL in PL/CSQL and check whether it runs normally.
 
@@ -156,7 +156,7 @@ After changing the code column type in the stadium table from INTEGER to VARCHAR
     ERROR: Stored procedure execute error: 
       (line 4, column 3) internal server error
 
-The column type change information was not reflected in the previously compiled PL/CSQL, so the stored procedure must be explicitly recompiled to execute correctly.
+Since the column type change information is not reflected in the previously compiled PL/CSQL execution code, the stored procedure must be recompiled in order to execute correctly.
 
 .. code-block:: sql
 
@@ -286,10 +286,10 @@ The **db_stored_procedure_args** system virtual table provides the information o
 
 
 ALTER FUNCTION
-==============
+===============
 
-The **ALTER FUNCTION** statement allows you to explicitly recompile a stored function.
-Explicit recompilation eliminates the need for implicit runtime recompilation, preventing associated runtime compilation errors and performance overhead.
+The **ALTER FUNCTION** statement allows you to recompile a stored function.
+Even if the schema of a table associated with the stored function changes, it is not automatically recompiled. Therefore, users must manually recompile the stored function to reflect the changes.
 
 ::
 
@@ -301,8 +301,8 @@ Explicit recompilation eliminates the need for implicit runtime recompilation, p
 
     If the owner of the stored function is changed, the function will be automatically recompiled under the new owner.
     To change the owner, refer to :ref:`ALTER … OWNER<change-owner>`\.
-
-The following is an example of how PL/CSQL can be recompiled using the COMPILE statement and then executed normally. 
+ 
+The following is an example that shows how to recompile PL/CSQL to run correctly after changing the table schema. 
 
 Create a stored function that uses Static SQL in PL/CSQL and check whether it runs normally.
 
@@ -335,7 +335,7 @@ After changing the code column type in the stadium table from INTEGER to VARCHAR
     ERROR: Stored procedure execute error: 
       (line 4, column 3) internal server error
 
-The column type change information was not reflected in the previously compiled PL/CSQL, so the stored function must be explicitly recompiled to execute correctly.
+Since the column type change information is not reflected in the previously compiled PL/CSQL execution code, the stored function must be recompiled in order to execute correctly.
 
 .. code-block:: sql
 
