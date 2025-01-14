@@ -254,7 +254,6 @@ DETERMINISTIC 키워드를 사용한 저장 함수를 상관 부질의에서 사
 .. code-block:: sql
     
     ;trace on
-    -- NOT DETERMINISTIC
     SELECT (SELECT pl_csql_not_deterministic (t1.col1) FROM dual) AS results FROM dummy_tbl t1;
 
 ::
@@ -280,7 +279,6 @@ pl_csql_not_deterministic 함수는 NOT DETERMINISTIC이므로 부질의 결과�
 .. code-block:: sql
     
     ;trace on
-    -- DETERMINISTIC
     SELECT (SELECT pl_csql_deterministic (t1.col1) FROM dual) AS results FROM dummy_tbl t1;
 
 ::

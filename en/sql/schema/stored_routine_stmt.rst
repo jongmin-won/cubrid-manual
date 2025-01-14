@@ -20,7 +20,7 @@ See details of how to use Stored Procedure, please refer to the :doc:`/sql/jsp`.
 ::
 
     CREATE [OR REPLACE] PROCEDURE procedure_name [(<parameter_definition> [, <parameter_definition>] ...)]
-    {IS | AS} LANGUAGE JAVA <java_call_specification>
+    [<authid>] {IS | AS} LANGUAGE JAVA <java_call_specification>
     COMMENT 'sp_comment_string';
     
         <parameter_definition> ::= parameter_name [IN|OUT|IN OUT|INOUT] sql_type [COMMENT 'param_comment_string']
@@ -30,6 +30,7 @@ See details of how to use Stored Procedure, please refer to the :doc:`/sql/jsp`.
 *   *parameter_name*: Specifies the name of the parameter (maximum 254 bytes).
 *   *sql_type*: Specifies the data type of the parameter. See details on the data types that can be used for the parameter, refer to the :ref:`jsp-type-mapping`.
 *   *param_comment_string*: Specifies comment of the parameter.
+*   *authid*: Specifies the execution privileges of the stored procedure. the default is AUTHID OWNER.
 *   *sp_comment_string*: Specifies comment of the stored procedure.
 *   *java_method_name*: Specifies the name of Java method name, including the name of the class it belongs to.
 *   *java_type*: Specifies the Java data type. See details on the Java data types that can be used to return, refer to the :ref:`jsp-type-mapping`.
@@ -133,16 +134,21 @@ See details of how to use Stored Function, please refer to the :doc:`/sql/jsp`.
 ::
 
     CREATE [OR REPLACE] FUNCTION function_name [(<parameter_definition> [, <parameter_definition>] ...)] RETURN sql_type
-    {IS | AS} LANGUAGE JAVA <java_call_specification>
+    [<authid_and_deterministic>] {IS | AS} LANGUAGE JAVA <java_call_specification>
     COMMENT 'sp_comment_string';
     
         <parameter_definition> ::= parameter_name [IN|OUT|IN OUT|INOUT] sql_type [COMMENT 'param_comment_string']
+	<authid_and_deterministic> ::=
+	    <authid> = [AUTHID DEFINER|AUTHID OWNER|AUTHID CALLER|AUTHID CURRENT_USER]
+	    | <deterministic> = [NOT DETERMINISTIC|DETERMINISTIC]
         <java_call_specification> ::= NAME 'java_method_name (java_type [,java_type]...) [return java_type]'
 
 *   *function_name*: Specifies the name of the stored function(maximum 254 bytes).
 *   *parameter_name*: Specifies the name of the parameter (maximum 254 bytes).
 *   *sql_type*: Specifies the data type of the parameter or of the return value. See details on the data types that can be used for the parameter, refer to the :ref:`jsp-type-mapping`.
 *   *param_comment_string*: Specifies comment of the parameter.
+*   *authid*: Specifies the execution privileges of the stored function. it can be used in conjunction with the deterministic keyword, regardless of the order. the default value is AUTHID OWNER.
+*   *deterministic*: Specifies that the stored function is to be used in a correlated subquery to cache and optimize the results of the subquery. it can be used in conjunction with the authid keyword, regardless of the order. the default value is NOT DETERMINISTIC.
 *   *sp_comment_string*: Specifies comment of the stored function.
 *   *java_method_name*: Specifies the name of Java method name, including the name of the class it belongs to.
 *   *java_type*: Specifies the Java data type. See details on the Java data types that can be used to return, refer to the :ref:`jsp-type-mapping`.
@@ -209,6 +215,92 @@ The **db_stored_procedure_args** system virtual table provides the information o
     sp_name   index_of  arg_name  data_type      mode
     =================================================
      'sp_int'                        0  'i'                   'INTEGER'             'IN'
+
+CREATE FUNCTION DETERMINISTIC
+------------------------------------------
+
+You can specify the DETERMINISTIC keyword when creating a stored function.
+When a stored function with the DETERMINISTIC keyword is used in a correlated subquery, it can cache the results of the subquery to optimize performance.
+
+The following is an example of a stored function using DETERMINISTIC. this example demonstrates the process of optimizing performance by caching the results when using a correlated subquery.
+
+.. code-block:: sql
+
+    CREATE TABLE dummy_tbl (col1 INTEGER);
+    INSERT INTO dummy_tbl VALUES (1), (2), (1), (2);
+
+    CREATE OR REPLACE FUNCTION pl_csql_not_deterministic (n INTEGER) RETURN INTEGER AS
+    BEGIN
+      return n + 1;
+    END;
+
+    CREATE OR REPLACE FUNCTION pl_csql_deterministic (n INTEGER) RETURN INTEGER DETERMINISTIC AS
+    BEGIN
+      return n + 1;
+    END;
+
+    SELECT sp_name, owner, sp_type, is_deterministic from db_stored_procedure;
+
+::
+    
+    sp_name                      owner           sp_type               is_deterministic    
+ ========================================================================================
+    'pl_csql_not_deterministic'  'DBA'           'FUNCTION'            'NO'                
+    'pl_csql_deterministic'      'DBA'           'FUNCTION'            'YES' 
+
+In the example above, the pl_csql_not_deterministic function does not use caching for the correlated subquery because it is NOT DETERMINISTIC. 
+However, the pl_csql_deterministic function uses the DETERMINISTIC keyword, allowing the results of the correlated subquery to be cached and optimizing performance.
+
+.. code-block:: sql
+    
+    ;trace on
+    SELECT (SELECT pl_csql_not_deterministic (t1.col1) FROM dual) AS results FROM dummy_tbl t1;
+
+::
+
+      results
+ =============
+            2
+            3
+            2
+            3
+ 
+ === Auto Trace ===
+    ...
+    Trace Statistics:
+      SELECT (time: 3, fetch: 44, fetch_time: 0, ioread: 0)
+        SCAN (table: dba.dummy_tbl), (heap time: 0, fetch: 20, ioread: 0, readrows: 4, rows: 4)
+        SUBQUERY (correlated)
+          SELECT (time: 3, fetch: 24, fetch_time: 0, ioread: 0)
+            SCAN (table: dual), (heap time: 0, fetch: 16, ioread: 0, readrows: 4, rows: 4)
+
+The pl_csql_not_deterministic function does not cache the results of the subquery because it is NOT DETERMINISTIC.
+
+.. code-block:: sql
+    
+    ;trace on
+    SELECT (SELECT pl_csql_deterministic (t1.col1) FROM dual) AS results FROM dummy_tbl t1;
+
+::
+
+      results
+ =============
+            2
+            3
+            2
+            3
+
+ === Auto Trace ===
+    ...
+    Trace Statistics:
+      SELECT (time: 3, fetch: 36, fetch_time: 0, ioread: 0)
+        SCAN (table: dba.dummy_tbl), (heap time: 0, fetch: 20, ioread: 0, readrows: 4, rows: 4)
+        SUBQUERY (correlated)
+          SELECT (time: 3, fetch: 16, fetch_time: 0, ioread: 0)
+            SCAN (table: dual), (heap time: 0, fetch: 8, ioread: 0, readrows: 2, rows: 2)
+            SUBQUERY_CACHE (hit: 2, miss: 2, size: 150808, status: enabled)
+
+In the trace result of the pl_csql_deterministic function, the SUBQUERY_CACHE item is displayed, and you can see that the first results (2) and (3) were missed from the cache, and subsequent identical results were hits from the cache.
 
 
 DROP FUNCTION
