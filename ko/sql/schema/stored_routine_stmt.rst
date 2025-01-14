@@ -19,7 +19,8 @@ CREATE PROCEDURE
 ::
 
     CREATE [OR REPLACE] PROCEDURE procedure_name [(<parameter_definition> [, <parameter_definition>] ...)]
-    [<authid>] {IS | AS} LANGUAGE <lang> <body> <comment>;
+    [<authid>] {IS | AS} LANGUAGE <lang> <body>
+    [COMMENT 'sp_comment_string'];
     
         <parameter_definition> ::= parameter_name [IN|OUT|IN OUT|INOUT] sql_type [COMMENT 'param_comment_string']
 	<authid> ::= [AUTHID DEFINER|AUTHID OWNER|AUTHID CALLER|AUTHID CURRENT_USER]
@@ -128,13 +129,13 @@ CREATE FUNCTION
 
 **CREATE FUNCTION** 문을 사용하여 저장 함수를 등록한다.
 CUBRID는 Java를 제외한 다른 언어에서는 저장 함수를 지원하지 않는다. CUBRID에서 저장 함수는 오직 Java로만 구현 가능하다.
-등록한 저장 함수의 사용 방법은 :doc:`/sql/jsp`\를 참고한다.
+등록한 저장 함수의 사용 방법은 :ref:`pl-jsp`\를 참고한다.
 
 ::
 
     CREATE [OR REPLACE] FUNCTION function_name [(<parameter_definition> [, <parameter_definition>] ...)] RETURN sql_type
     [<authid_and_deterministic>] {IS | AS} LANGUAGE JAVA <java_call_specification>
-    COMMENT 'sp_comment_string';
+    [COMMENT 'sp_comment_string'];
     
         <parameter_definition> ::= parameter_name [IN|OUT|IN OUT|INOUT] sql_type [COMMENT 'param_comment_string']
 	<authid_and_deterministic> ::=

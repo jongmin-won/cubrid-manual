@@ -20,10 +20,12 @@ See details of how to use Stored Procedure, please refer to the :doc:`/sql/jsp`.
 ::
 
     CREATE [OR REPLACE] PROCEDURE procedure_name [(<parameter_definition> [, <parameter_definition>] ...)]
-    [<authid>] {IS | AS} LANGUAGE JAVA <java_call_specification>
-    COMMENT 'sp_comment_string';
+    [<authid>] {IS | AS} LANGUAGE <lang> <body>
+    [COMMENT 'sp_comment_string'];
     
         <parameter_definition> ::= parameter_name [IN|OUT|IN OUT|INOUT] sql_type [COMMENT 'param_comment_string']
+	<authid> ::= [AUTHID DEFINER|AUTHID OWNER|AUTHID CALLER|AUTHID CURRENT_USER]
+        <lang> ::= [PLCSQL|JAVA|]
         <java_call_specification> ::= NAME 'java_method_name (java_type [,java_type]...) [return java_type]'
 
 *   *procedure_name*: Specifies the name of the stored procedure(maximum 254 bytes).
@@ -129,13 +131,13 @@ CREATE FUNCTION
 Create stored function using the **CREATE FUNCTION** statement.
 The other languages except Java do not support stored function. 
 In CUBRID, only Java can implement stored function.
-See details of how to use Stored Function, please refer to the :doc:`/sql/jsp`.
+See details of how to use Stored Function, please refer to the :ref:`pl-jsp`.
 
 ::
 
     CREATE [OR REPLACE] FUNCTION function_name [(<parameter_definition> [, <parameter_definition>] ...)] RETURN sql_type
     [<authid_and_deterministic>] {IS | AS} LANGUAGE JAVA <java_call_specification>
-    COMMENT 'sp_comment_string';
+    [COMMENT 'sp_comment_string'];
     
         <parameter_definition> ::= parameter_name [IN|OUT|IN OUT|INOUT] sql_type [COMMENT 'param_comment_string']
 	<authid_and_deterministic> ::=
