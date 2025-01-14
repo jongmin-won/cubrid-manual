@@ -147,8 +147,8 @@ CUBRID는 Java를 제외한 다른 언어에서는 저장 함수를 지원하지
 *   *parameter_name*: 인자의 이름을 지정한다(최대 254바이트).
 *   *sql_type*: 인자 또는 리턴 값의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
 *   *param_comment_string*: 인자 커멘트 문자열을 지정한다.
-*   *authid*: 저장 함수의 실행 권한을 지정한다. deterministic 키워드와 순서와 상관없이 함께 사용할 수 있다. 기본값은 AUTHID OWNER이다.
-*   *deterministic*: 저장 함수를 상관 부질의에서 사용하는 경우, 부질의 결과를 캐시하여 최적화하는 용도로 지정한다. authid 키워드와 순서와 관계없이 함께 사용할 수 있다. 기본값은 NOT DETERMINISTIC이다.
+*   *authid*: 저장 함수의 실행 권한을 지정한다. 기본값은 AUTHID OWNER이다.
+*   *deterministic*: 하나의 질의내에서 동일 인자값에 대해 저장 함수 결과가 항상 동일한 값을 반환하는 함수인지 여부를 표현하는 것으로, DETERMINISTIC으로 설정된 저장 함수를 상관 부질의 사용시, 질의 최적화기는 해당 함수를 부질의 결과 캐시 최적화의 대상으로 처리한다. 기본값은 NOT DETERMINISTIC이다.
 *   *sp_comment_string*: 저장 함수의 커멘트 문자열을 지정한다.
 *   *java_method_name*: 자바의 클래스 이름을 포함하여 자바의 메소드 이름을 지정한다.
 *   *java_type*: 자바의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
@@ -222,6 +222,8 @@ CREATE FUNCTION DETERMINISTIC
 
 저장 함수 생성 시 DETERMINISTIC 키워드를 명시할 수 있다.
 DETERMINISTIC 키워드를 사용한 저장 함수를 상관 부질의에서 사용할 경우, 부질의 결과를 캐시하여 성능을 최적화할 수 있다.
+
+상관 부질의 캐시 동작 방식에 대한 자세한 내용은 :ref:`correlated-subquery-cache`\을 참고한다.
 
 다음은 DETERMINISTIC을 사용한 저장 함수의 예시이다. 이 예시에서는 상관 부질의를 사용할 때 결과를 캐시하여 성능을 최적화하는 과정을 보여준다.
 
@@ -301,7 +303,7 @@ pl_csql_not_deterministic 함수는 NOT DETERMINISTIC이므로 부질의 결과�
             SCAN (table: dual), (heap time: 0, fetch: 8, ioread: 0, readrows: 2, rows: 2)
             SUBQUERY_CACHE (hit: 2, miss: 2, size: 150808, status: enabled)
 
-pl_csql_deterministic 함수의 Trace 결과에서는 SUBQUERY_CACHE 항목이 표시되며, 첫 번째 결과 (2), (3)은 캐시에서 miss되었고, 이후 동일한 결과부터는 캐시에서 hit된 것을 확인할 수 있다.
+pl_csql_deterministic 함수의 Trace 결과에서는 SUBQUERY_CACHE 항목이 표시되며(hit: 2, miss: 2, size: 150808, status: enabled), 첫 번째 결과 (2), (3)은 캐시에서 miss되었고, 이후 동일한 결과부터는 캐시에서 hit된 것을 확인할 수 있다.
 
 
 DROP FUNCTION
