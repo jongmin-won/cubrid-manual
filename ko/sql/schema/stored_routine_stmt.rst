@@ -19,9 +19,10 @@ CREATE PROCEDURE
 ::
 
     CREATE [OR REPLACE] PROCEDURE procedure_name [(<parameter_definition> [, <parameter_definition>] ...)]
-    {IS | AS} LANGUAGE <lang> <body> <comment>;
+    [<authid>] {IS | AS} LANGUAGE <lang> <body> <comment>;
     
         <parameter_definition> ::= parameter_name [IN|OUT|IN OUT|INOUT] sql_type [COMMENT 'param_comment_string']
+	<authid> ::= [AUTHID DEFINER|AUTHID OWNER|AUTHID CALLER|AUTHID CURRENT_USER]
         <lang> ::= [PLCSQL|JAVA|]
         <java_call_specification> ::= NAME 'java_method_name (java_type [,java_type]...) [return java_type]'
 
@@ -29,6 +30,7 @@ CREATE PROCEDURE
 *   *parameter_name*: 인자의 이름을 지정한다(최대 254바이트).
 *   *sql_type*: 인자의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
 *   *param_comment_string*: 인자 커멘트 문자열을 지정한다.
+*   *authid*: 저장 프로시저의 실행 권한을 지정한다. 기본값은 AUTHID OWNER이다.
 *   *sp_comment_string*: 저장 프로시저의 커멘트 문자열을 지정한다.
 *   *java_method_name*: 자바의 클래스 이름을 포함하여 자바의 메소드 이름을 지정한다.
 *   *java_type*: 자바의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
@@ -131,17 +133,22 @@ CUBRID는 Java를 제외한 다른 언어에서는 저장 함수를 지원하지
 ::
 
     CREATE [OR REPLACE] FUNCTION function_name [(<parameter_definition> [, <parameter_definition>] ...)] RETURN sql_type
-    {IS | AS} LANGUAGE JAVA <java_call_specification>
+    [<authid_and_deterministic>] {IS | AS} LANGUAGE JAVA <java_call_specification>
     COMMENT 'sp_comment_string';
     
         <parameter_definition> ::= parameter_name [IN|OUT|IN OUT|INOUT] sql_type [COMMENT 'param_comment_string']
+	<authid_and_deterministic> ::=
+	    <authid> = [AUTHID DEFINER|AUTHID OWNER|AUTHID CALLER|AUTHID CURRENT_USER]
+	    | <deterministic> = [NOT DETERMINISTIC|DETERMINISTIC]
         <java_call_specification> ::= NAME 'java_method_name (java_type [,java_type]...) [return java_type]'
 
 *   *function_name*: 생성할 저장 함수의 이름을 지정한다(최대 254바이트).
 *   *parameter_name*: 인자의 이름을 지정한다(최대 254바이트).
 *   *sql_type*: 인자 또는 리턴 값의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
 *   *param_comment_string*: 인자 커멘트 문자열을 지정한다.
-*   *sp_comment_string*: 저장 프로시저의 커멘트 문자열을 지정한다.
+*   *authid*: 저장 함수의 실행 권한을 지정한다. deterministic 키워드와 순서와 상관없이 함께 사용할 수 있다. 기본값은 AUTHID OWNER이다.
+*   *deterministic*: 저장 함수를 상관 부질의에서 사용하는 경우, 부질의 결과를 캐시하여 최적화하는 용도로 지정한다. authid 키워드와 순서와 관계없이 함께 사용할 수 있다. 기본값은 NOT DETERMINISTIC이다.
+*   *sp_comment_string*: 저장 함수의 커멘트 문자열을 지정한다.
 *   *java_method_name*: 자바의 클래스 이름을 포함하여 자바의 메소드 이름을 지정한다.
 *   *java_type*: 자바의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
 
@@ -208,6 +215,94 @@ Java Call Specification 작성 방법에 대해서는 :ref:`call-specification`\
     sp_name   index_of  arg_name  data_type      mode
     =================================================
      'sp_int'                        0  'i'                   'INTEGER'             'IN'
+
+CREATE FUNCTION DETERMINISTIC
+------------------------------------------
+
+저장 함수 생성 시 DETERMINISTIC 키워드를 명시할 수 있다.
+DETERMINISTIC 키워드를 사용한 저장 함수를 상관 부질의에서 사용할 경우, 부질의 결과를 캐시하여 성능을 최적화할 수 있다.
+
+다음은 DETERMINISTIC을 사용한 저장 함수의 예시이다. 이 예시에서는 상관 부질의를 사용할 때 결과를 캐시하여 성능을 최적화하는 과정을 보여준다.
+
+.. code-block:: sql
+
+    CREATE TABLE dummy_tbl (col1 INTEGER);
+    INSERT INTO dummy_tbl VALUES (1), (2), (1), (2);
+
+    CREATE OR REPLACE FUNCTION pl_csql_not_deterministic (n INTEGER) RETURN INTEGER AS
+    BEGIN
+      return n + 1;
+    END;
+
+    CREATE OR REPLACE FUNCTION pl_csql_deterministic (n INTEGER) RETURN INTEGER DETERMINISTIC AS
+    BEGIN
+      return n + 1;
+    END;
+
+    SELECT sp_name, owner, sp_type, is_deterministic from db_stored_procedure;
+
+::
+    
+    sp_name                      owner           sp_type               is_deterministic    
+ ========================================================================================
+    'pl_csql_not_deterministic'  'DBA'           'FUNCTION'            'NO'                
+    'pl_csql_deterministic'      'DBA'           'FUNCTION'            'YES' 
+
+위 예시에서 pl_csql_not_deterministic 함수는 NOT DETERMINISTIC이므로 상관 부질의에서 캐시를 사용하지 않는다.
+반면, pl_csql_deterministic 함수는 DETERMINISTIC 키워드가 지정되어 있으므로 상관 부질의 결과를 캐시하여 성능을 최적화할 수 있다.
+
+.. code-block:: sql
+    
+    ;trace on
+    -- NOT DETERMINISTIC
+    SELECT (SELECT pl_csql_not_deterministic (t1.col1) FROM dual) AS results FROM dummy_tbl t1;
+
+::
+
+      results
+ =============
+            2
+            3
+            2
+            3
+ 
+ === Auto Trace ===
+    ...
+    Trace Statistics:
+      SELECT (time: 3, fetch: 44, fetch_time: 0, ioread: 0)
+        SCAN (table: dba.dummy_tbl), (heap time: 0, fetch: 20, ioread: 0, readrows: 4, rows: 4)
+        SUBQUERY (correlated)
+          SELECT (time: 3, fetch: 24, fetch_time: 0, ioread: 0)
+            SCAN (table: dual), (heap time: 0, fetch: 16, ioread: 0, readrows: 4, rows: 4)
+
+pl_csql_not_deterministic 함수는 NOT DETERMINISTIC이므로 부질의 결과를 캐시하지 않는다.
+
+.. code-block:: sql
+    
+    ;trace on
+    -- DETERMINISTIC
+    SELECT (SELECT pl_csql_deterministic (t1.col1) FROM dual) AS results FROM dummy_tbl t1;
+
+::
+
+      results
+ =============
+            2
+            3
+            2
+            3
+
+ === Auto Trace ===
+    ...
+    Trace Statistics:
+      SELECT (time: 3, fetch: 36, fetch_time: 0, ioread: 0)
+        SCAN (table: dba.dummy_tbl), (heap time: 0, fetch: 20, ioread: 0, readrows: 4, rows: 4)
+        SUBQUERY (correlated)
+          SELECT (time: 3, fetch: 16, fetch_time: 0, ioread: 0)
+            SCAN (table: dual), (heap time: 0, fetch: 8, ioread: 0, readrows: 2, rows: 2)
+            SUBQUERY_CACHE (hit: 2, miss: 2, size: 150808, status: enabled)
+
+pl_csql_deterministic 함수의 Trace 결과에서는 SUBQUERY_CACHE 항목이 표시되며, 첫 번째 결과 (2), (3)은 캐시에서 miss되었고, 이후 동일한 결과부터는 캐시에서 hit된 것을 확인할 수 있다.
 
 
 DROP FUNCTION
