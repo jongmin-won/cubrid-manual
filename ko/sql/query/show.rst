@@ -674,7 +674,7 @@ Sector_alloc_table_first_page       INT             섹터 할당 테이블의 �
 Page_alloc_table_size_in_pages      INT             페이지 내 페이지 할당 테이블의 크기
 Page_alloc_table_first_page         INT             페이지 할당 테이블의 첫번째 페이지
 Last_system_page                    INT             마지막 시스템 페이지
-Creation_time                       DATETIME        데이터베이스 생성 시간
+Creation_time                       DATETIME        볼륨 생성 시간
 Db_charset                          INT             데이터베이스 문자셋번호 
 Checkpoint_lsa                      VARCHAR(64)     이 볼륨의 복구 절차를 시작하는 가장 작은 로그 일련 주소
 Boot_hfid                           VARCHAR(64)     다중 볼륨과 데이터베이스 기동을 위한 시스템 힙 파일ID
@@ -722,9 +722,11 @@ SHOW LOG HEADER
 
 ::
 
-    SHOW LOG HEADER [OF file_name];
+    SHOW LOG HEADER [OF file_path];
     
-OF file_name을 생략하면 메모리의 헤더 정보를 출력하며, OF file_name을 포함하면 file_name의 헤더 정보를 출력한다.
+OF file_path를 생략하면 메모리의 헤더 정보를 출력하며, OF file_path를 포함하면 file_path의 헤더 정보를 출력한다.
+file_path에는 활성 로그 파일의 상대경로 또는 절대경로를 입력할 수 있다.
+상대경로 입력 시 기준이 되는 경로는 활성 로그 파일이 존재하는 디렉터리이다.
 
 해당 구문은 다음의 칼럼을 출력한다.
 
@@ -734,7 +736,7 @@ Column name                         Type            Description
 Volume_id                           INT             볼륨 식별자
 Magic_symbol                        VARCHAR(32)     로그 파일의 매직 값
 Magic_symbol_location               INT             로그 페이지의 매직 심볼 위치
-Creation_time                       DATETIME        데이터베이스 생성 시간
+Creation_time                       DATETIME        볼륨 생성 시간
 Release                             VARCHAR(32)     CUBRID 릴리즈 버전
 Compatibility_disk_version          VARCHAR(32)     현재 릴리즈 버전에 대한 DB의 호환성
 Db_page_size                        INT             DB 페이지의 크기
@@ -877,7 +879,10 @@ SHOW ARCHIVE LOG HEADER
 
 ::
 
-    SHOW ARCHIVE LOG HEADER OF file_name;
+    SHOW ARCHIVE LOG HEADER OF file_path;
+
+file_path에는 보관 로그 파일의 상대경로 또는 절대경로를 입력할 수 있다.
+상대경로 입력 시 기준이 되는 경로는 보관 로그 파일이 존재하는 디렉터리이다.
 
 해당 구문은 다음의 칼럼을 출력한다.
 
@@ -887,7 +892,7 @@ SHOW ARCHIVE LOG HEADER
 Volume_id                           INT             로그 볼륨 ID
 Magic_symbol                        VARCHAR(32)     보관 로그 파일의 매직 값
 Magic_symbol_location               INT             로그 페이지로부터 매직 심볼 위치
-Creation_time                       DATETIME        DB 생성 시간
+Creation_time                       DATETIME        볼륨 생성 시간
 Next_trans_id                       BIGINT          다음 트랜잭션 ID
 Num_pages                           INT             보관 로그에서 페이지의 개수
 First_page_id                       BIGINT          보관 로그에서 물리적 위치 1에 대한 논리 페이지 ID
