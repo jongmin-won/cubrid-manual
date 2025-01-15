@@ -155,7 +155,7 @@ stadium 테이블의 code 컬럼 타입을 INTEGER에서 VARCHAR로 변경한 �
     ERROR: Stored procedure execute error: 
       (line 4, column 3) internal server error
 
-컬럼 타입 변경 정보가 기존에 컴파일된 PL/CSQL의 실행코드에 반영되지 않았기 때문에, 저장 프로시저를 재컴파일을 수행해야 정상적으로 실행할 수 있다.
+컬럼 타입 변경 정보가 기존에 컴파일된 PL/CSQL의 실행코드에 반영되지 않았기 때문에, 저장 프로시저를 재컴파일해야 정상적으로 실행할 수 있다.
 
 .. code-block:: sql
 
