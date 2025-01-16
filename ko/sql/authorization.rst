@@ -183,7 +183,12 @@ GRANT
 
 CUBRID에서 권한 부여의 최소 단위는 테이블이다. 자신이 만든 테이블에 다른 사용자(그룹)의 접근을 허용하려면 해당 사용자(그룹)에게 적절한 권한을 부여해야 한다.
 
-권한이 부여된 그룹에 속한 모든 멤버는 같은 권한을 소유하므로 모든 멤버에게 개별적으로 권한을 부여할 필요는 없다. **PUBLIC** 사용자가 생성한 (가상) 테이블은 모든 사용자에게 접근이 허용된다. **GRANT** 문을 사용하여 사용자에게 접근 권한을 부여할 수 있다. ::
+권한이 부여된 그룹에 속한 모든 멤버는 같은 권한을 소유하므로 모든 멤버에게 개별적으로 권한을 부여할 필요는 없다. 
+단, DBA와 소유자 그룹의 멤버가 아닌 WITH GRANT OPTION 권한을 부여받은 그룹의 멤버는 그룹장이 부여받은 권한을 다른 사용자에게 부여할 수 없다. 
+
+**PUBLIC** 사용자가 생성한 (가상) 테이블은 모든 사용자에게 접근이 허용된다. **GRANT** 문을 사용하여 사용자에게 접근 권한을 부여할 수 있다. 
+
+::
 
     GRANT operation [ { ,operation } ... ] ON [schema_name.]table_name [ { , [schema_name.]table_name } ... ]
     TO user [ { ,user } ... ] [ WITH GRANT OPTION ] ; 
@@ -230,8 +235,26 @@ CUBRID에서 권한 부여의 최소 단위는 테이블이다. 자신이 만든
 
     GRANT SELECT ON record, history TO brown WITH GRANT OPTION;
 
+다음은 *DBA* 가 일반 사용자 *u1* 의 *tbl3* 테이블에 대해 사용자 *u2* 에게 **SELECT** 권한을 부여한 후, *grantor_name* 열을 확인한 예제이다. 권한을 부여한 사용자(DBA)는 *grantor_name* 열에서 소유자(U1)로 표시된다.
+
+.. code-block:: sql
+    
+    CREATE USER u1;
+    CREATE USER u2;
+    CREATE TABLE u1.tbl3 (a INT);
+    GRANT SELECT ON u1.tbl3 TO u2;
+
+    SELECT * FROM db_auth WHERE object_name = 'tbl3';
+
+::
+
+    grantor_name          grantee_name          object_type           object_name           owner_name            auth_type             is_grantable        
+    ==========================================================================================================================================================
+    'U1'                  'U2'                  'CLASS'               'tbl3'                'U1'                  'SELECT'              'NO'   
+
 .. note::
 
+    *   DBA, DBA 멤버, 소유자 멤버는 권한을 부여할 때, 소유자와 동일하게 권한을 부여한다. 즉, *grantor_name* 열에 소유자로 표시된다.
     *   권한을 부여하는 사용자는 권한 부여 전에 나열된 모든 테이블의 소유자이거나, **WITH GRANT OPTION** 을 가지고 있어야 한다.
     *   뷰에 대한 **SELECT**, **UPDATE**, **DELETE**, **INSERT** 권한을 부여하기 전에 뷰의 소유자는 뷰의 질의 명세부에 포함되어 있는 모든 테이블에 대해서 **SELECT** 권한과 **GRANT** 권한을 가져야 한다. **DBA** 사용자와 **DBA** 그룹에 속한 멤버는 자동적으로 모든 테이블에 대한 모든 권한을 가진다.
     *   **TRUNCATE** 문을 수행하려면 **ALTER**, **INDEX**, **DELETE** 권한이 필요하다.
@@ -270,6 +293,45 @@ REVOKE
 .. code-block:: sql
 
     REVOKE ALL PRIVILEGES ON nation, athlete FROM smith;
+
+다음은 *u2*, *u3* 사용자에게 *tbl1* 테이블에 대해 순차적으로 **SELECT** 권한과 **WITH GRANT OPTION** 권한을 부여한 후, *DBA* 가 *u2* 의 권한을 해지하는 예제이다. 
+권한을 해지한 사용자(DBA)는 *grantor_name* 열에서 소유자(U1)로 표시된 권한만 해지할 수 있으며, **WITH GRANT OPTION** 권한을 부여받은 사용자 *u3* 의 권한도 함께 해지된다.
+
+.. code-block:: sql
+    
+    CREATE USER u1;
+    CREATE USER u2;
+    CREATE USER u3;
+    CREATE TABLE u1.tbl1 (a INT);
+    GRANT SELECT ON u1.tbl1 TO u2 WITH GRANT OPTION;
+
+    CALL LOGIN ('u2','') ON CLASS db_user;
+    GRANT SELECT ON u1.tbl1 TO u3 WITH GRANT OPTION;
+    
+    CALL LOGIN ('dba','') ON CLASS db_user;
+    SELECT * FROM db_auth WHERE object_name = 'tbl1';
+
+::
+
+    grantor_name          grantee_name          object_type           object_name           owner_name            auth_type             is_grantable        
+    ==========================================================================================================================================================
+    'U1'                  'U2'                  'CLASS'               'tbl1'                'U1'                  'SELECT'              'YES'               
+    'U2'                  'U3'                  'CLASS'               'tbl1'                'U1'                  'SELECT'              'YES'   
+
+.. code-block:: sql
+    
+    REVOKE SELECT ON u1.tbl1 FROM u2;
+
+    SELECT * FROM db_auth WHERE object_name = 'tbl1';
+
+::
+
+    There are no results.
+    0 row selected.
+
+.. note::
+
+    *   DBA, DBA 멤버, 소유자 멤버는 권한을 해지할 때, 소유자와 동일하게 권한을 해지한다. 즉, *grantor_name* 열에 소유자로 표시된 권한을 해지할 수 있다.
 
 .. _change-owner:
 
