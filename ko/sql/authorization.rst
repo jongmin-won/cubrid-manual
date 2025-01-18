@@ -295,8 +295,8 @@ REVOKE
 
     REVOKE ALL PRIVILEGES ON nation, athlete FROM smith;
 
-다음은 *u1* 사용자가 *tbl1*에 대해 *u2* 사용자에게 **WITH GRANT OPTION**과 함께 **SELECT**권한을 부여하고, *u2* 사용자는 *u3* 사용자에게 *tbl1* 테이블의 **SELECT** 권한 부여한 후, *DBA* 가 *u1*사용자의 *tbl1*에 부여된 *u2* 의 권한을 해지하는 예시이다.
-*tbl1*에 대한 *u2*의 권한 해지시, *u2*가 **WITH GRANT OPTION**을 이용해서 부여한 권한에 대해서도 함께 해지된다.
+다음은 *u1* 사용자가 *tbl1*에 대해 *u2* 사용자에게 **WITH GRANT OPTION** 과 함께 **SELECT** 권한을 부여하고, *u2* 사용자는 *u3* 사용자에게 *tbl1* 테이블의 **SELECT** 권한 부여한 후, *DBA* 가 *u1* 사용자의 *tbl1* 에 부여된 *u2* 의 권한을 해지하는 예시이다.
+*tbl1* 에 대한 *u2* 의 권한 해지시, *u2* 가 **WITH GRANT OPTION** 을 이용해서 부여한 권한에 대해서도 함께 해지된다.
 
 .. code-block:: sql
     
