@@ -226,7 +226,7 @@ CREATE FUNCTION DETERMINISTIC
 ------------------------------------------
 
 NOT DETERMINISTIC 키워드는 저장 함수가 동일한 입력값에 대해 다른 결과를 반환하는 함수이다.
-NOT DETERMINISTIC으로 설정된 함수는 최적화 및 캐싱 대상에서 제외되며, 매 호출 시 결과가 재계산된다.
+NOT DETERMINISTIC으로 설정된 함수는 부질의 결과 캐시 최적화의 대상에서 제외되며, 매 호출 시 결과가 재계산된다.
 기본값은 NOT DETERMINISTIC이다.
 
 DETERMINISTIC 키워드는 저장 함수가 동일한 입력값에 대해 항상 동일한 결과를 반환하는 함수이다. 
