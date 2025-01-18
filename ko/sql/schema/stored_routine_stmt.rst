@@ -128,7 +128,7 @@ CREATE FUNCTION
 
 **CREATE FUNCTION** 문을 사용하여 저장 함수를 등록한다.
 CUBRID는 Java를 제외한 다른 언어에서는 저장 함수를 지원하지 않는다. CUBRID에서 저장 함수는 오직 Java로만 구현 가능하다.
-등록한 저장 함수의 사용 방법은 :doc:`/sql/jsp`\를 참고한다.
+등록한 저장 함수의 사용 방법은 :ref:`pl-jsp`\를 참고한다.
 
 ::
 
