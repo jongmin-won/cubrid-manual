@@ -108,8 +108,9 @@ ALTER PROCEDURE
 
 ::
 
-    ALTER PROCEDURE procedure_name COMPILE;
+    ALTER PROCEDURE [schema_name.]procedure_name COMPILE;
 
+*   *schema_name*: 스키마 이름을 지정한다. 생략하면 현재 세션의 스키마 이름을 사용한다.
 *   *procedure_name*: 재컴파일할 프로시저의 이름을 지정한다.
 
 .. note::
@@ -292,8 +293,9 @@ ALTER FUNCTION
 
 ::
 
-    ALTER FUNCTION function_name COMPILE;
+    ALTER FUNCTION [schema_name.]function_name COMPILE;
 
+*   *schema_name*: 스키마 이름을 지정한다. 생략하면 현재 세션의 스키마 이름을 사용한다.
 *   *function_name*: 재컴파일할 함수의 이름을 지정한다.
 
 .. note::

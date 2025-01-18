@@ -1,6 +1,6 @@
 
-:meta-keywords: procedure definition, create procedure, alter procedure, drop procedure, function definition, create function, alter function, drop function
-:meta-description: Define functions/procedures in CUBRID database using create procedure, create function, alter procedure, alter function, drop procedure and drop function statements.
+:meta-keywords: procedure definition, create procedure, drop procedure, function definition, create function, drop function
+:meta-description: Define functions/procedures in CUBRID database using create procedure, create function, drop procedure and drop function statements.
 
 
 ************************************************
@@ -99,80 +99,6 @@ The **db_stored_procedure_args** system virtual table provides the information o
      'athlete_add'                   1  'gender'              'STRING'              'IN'
      'athlete_add'                   2  'nation_code'         'STRING'              'IN'
      'athlete_add'                   3  'event'               'STRING'              'IN'
-
-
-ALTER PROCEDURE
-================
-
-The **ALTER PROCEDURE** statement allows you to recompile a stored procedure.
-Even if the schema of a table associated with the stored procedure changes, it is not automatically recompiled. Therefore, users must manually recompile the stored procedure to reflect the changes.
-
-::
-
-    ALTER PROCEDURE procedure_name COMPILE;
-
-*   *procedure_name*: Specifies the name of the procedure to be recompiled.
-
-.. note::
-
-    If the owner of the stored procedure is changed, the procedure will be automatically recompiled under the new owner.
-    To change the owner, refer to :ref:`ALTER … OWNER<change-owner>`\.
-
-The following is an example that shows how to recompile PL/CSQL to run correctly after changing the table schema. 
-
-Create a stored procedure that uses Static SQL in PL/CSQL and check whether it runs normally.
-
-.. code-block:: sql
-
-    CREATE OR REPLACE PROCEDURE proc_stadium_code() AS
-      n INTEGER;
-    BEGIN
-      SELECT code INTO n FROM stadium LIMIT 1;
-      DBMS_OUTPUT.put_line('code :' || n);
-    END;
-    
-    ;server-output on
-    CALL proc_stadium_code();
-::
-    
-    Result              
-    ======================
-      NULL                
-
-    <DBMS_OUTPUT>
-    ====
-    code :30140
-
-After changing the code column type in the stadium table from INTEGER to VARCHAR, running the stored procedure results in the following error occurs.
-
-.. code-block:: sql
-
-    ALTER TABLE public.stadium MODIFY code VARCHAR;
-
-    CALL proc_stadium_code();
-
-::
-
-    ERROR: Stored procedure execute error: 
-      (line 4, column 3) internal server error
-
-Since the column type change information is not reflected in the previously compiled PL/CSQL execution code, the stored procedure must be recompiled in order to execute correctly.
-
-.. code-block:: sql
-
-    ALTER PROCEDURE proc_stadium_code COMPILE;
-
-    CALL proc_stadium_code();
-
-::
-
-    Result              
-    ======================
-      NULL                
-
-    <DBMS_OUTPUT>
-    ====
-    code :30140
 
 
 DROP PROCEDURE
@@ -283,71 +209,6 @@ The **db_stored_procedure_args** system virtual table provides the information o
     sp_name   index_of  arg_name  data_type      mode
     =================================================
      'sp_int'                        0  'i'                   'INTEGER'             'IN'
-
-
-ALTER FUNCTION
-===============
-
-The **ALTER FUNCTION** statement allows you to recompile a stored function.
-Even if the schema of a table associated with the stored function changes, it is not automatically recompiled. Therefore, users must manually recompile the stored function to reflect the changes.
-
-::
-
-    ALTER FUNCTION function_name COMPILE;
-
-*   *function_name*: Specifies the name of the function to be recompiled.
-
-.. note::
-
-    If the owner of the stored function is changed, the function will be automatically recompiled under the new owner.
-    To change the owner, refer to :ref:`ALTER … OWNER<change-owner>`\.
- 
-The following is an example that shows how to recompile PL/CSQL to run correctly after changing the table schema. 
-
-Create a stored function that uses Static SQL in PL/CSQL and check whether it runs normally.
-
-.. code-block:: sql
-
-    CREATE OR REPLACE FUNCTION func_stadium_code() RETURN INTEGER AS
-      n INTEGER;
-    BEGIN
-      SELECT code INTO n FROM stadium LIMIT 1;
-      RETURN n;
-    END;
-    
-    CALL func_stadium_code();
-::
-    
-    Result              
-    ======================
-    30140               
-
-After changing the code column type in the stadium table from INTEGER to VARCHAR, running the stored function results in the following error occurs.
-
-.. code-block:: sql
-
-    ALTER TABLE public.stadium MODIFY code VARCHAR;
-
-    CALL func_stadium_code();
-
-::
-
-    ERROR: Stored procedure execute error: 
-      (line 4, column 3) internal server error
-
-Since the column type change information is not reflected in the previously compiled PL/CSQL execution code, the stored function must be recompiled in order to execute correctly.
-
-.. code-block:: sql
-
-    ALTER FUNCTION func_stadium_code COMPILE;
-
-    CALL func_stadium_code();
-
-::
-
-    Result              
-    ======================
-    30140
 
 
 DROP FUNCTION
