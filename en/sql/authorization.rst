@@ -293,10 +293,6 @@ Database Administrator (**DBA**) or a member of the **DBA** group can change the
     ALTER PROCEDURE test_procedure OWNER TO public;
     ALTER SERIAL test_serial OWNER TO public;
 
-.. warning:: 
-
-    **When changing the owner, all permissions granted by the previous owner for the object are automatically revoked, so the permissions for the object should be checked and caution should be exercised before changing the owner.**
-
 .. _authorization-method:
 
 User Authorization Management METHOD
