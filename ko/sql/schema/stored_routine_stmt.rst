@@ -19,19 +19,21 @@ CREATE PROCEDURE
 ::
 
     CREATE [OR REPLACE] PROCEDURE procedure_name [(<parameter_definition> [, <parameter_definition>] ...)]
-    [<authid>] {IS | AS} LANGUAGE <lang> <body>
-    [COMMENT 'sp_comment_string'];
-    
+    [<authid>] {IS | AS} <lang>
+    [COMMENT 'sp_comment_string'];	
+
         <parameter_definition> ::= parameter_name [IN|OUT|IN OUT|INOUT] sql_type [COMMENT 'param_comment_string']
-	<authid> ::= [AUTHID DEFINER|AUTHID OWNER|AUTHID CALLER|AUTHID CURRENT_USER]
-        <lang> ::= [PLCSQL|JAVA|]
+        <authid> ::= AUTHID {DEFINER | OWNER | CALLER | CURRENT_USER}
+        <lang> ::=
+	    LANGUAGE JAVA <java_call_specification> |
+	    [LANGUAGE PLCSQL] [ <seq_of_declare_specs> ] <body>
         <java_call_specification> ::= NAME 'java_method_name (java_type [,java_type]...) [return java_type]'
 
 *   *procedure_name*: 생성할 저장 프로시저의 이름을 지정한다(최대 254바이트).
 *   *parameter_name*: 인자의 이름을 지정한다(최대 254바이트).
 *   *sql_type*: 인자의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
 *   *param_comment_string*: 인자 커멘트 문자열을 지정한다.
-*   *authid*: 저장 프로시저의 실행 권한을 지정한다. 기본값은 AUTHID OWNER이다.
+*   *authid*: 저장 프로시저의 실행 권한을 지정한다. DEFINER(OWNER)는 프로시저를 정의한 사용자(소유자)의 권한으로 프로시저를 실행한다. CURRENT_USER(CALLER)는 프로시저를 호출한 사용자의 권한으로 프로시저를 실행한다. 기본값은 DEFINER(OWNER)이다. Java SP는 DEFINER 권한과 CURRENT_USER 권한으로 실행된다. PL/CSQL은 DEFINER 권한으로만 실행된다.
 *   *sp_comment_string*: 저장 프로시저의 커멘트 문자열을 지정한다.
 *   *java_method_name*: 자바의 클래스 이름을 포함하여 자바의 메소드 이름을 지정한다.
 *   *java_type*: 자바의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
@@ -129,25 +131,28 @@ CREATE FUNCTION
 
 **CREATE FUNCTION** 문을 사용하여 저장 함수를 등록한다.
 CUBRID는 Java를 제외한 다른 언어에서는 저장 함수를 지원하지 않는다. CUBRID에서 저장 함수는 오직 Java로만 구현 가능하다.
-등록한 저장 함수의 사용 방법은 :ref:`pl-jsp`\를 참고한다.
+등록한 저장 함수의 사용 방법은 :doc:`/sql/jsp`\를 참고한다.
 
 ::
 
     CREATE [OR REPLACE] FUNCTION function_name [(<parameter_definition> [, <parameter_definition>] ...)] RETURN sql_type
-    [<authid_and_deterministic>] {IS | AS} LANGUAGE JAVA <java_call_specification>
+    [<procedure_properties>] {IS | AS} <lang>
     [COMMENT 'sp_comment_string'];
-    
+
         <parameter_definition> ::= parameter_name [IN|OUT|IN OUT|INOUT] sql_type [COMMENT 'param_comment_string']
-	<authid_and_deterministic> ::=
-	    <authid> = [AUTHID DEFINER|AUTHID OWNER|AUTHID CALLER|AUTHID CURRENT_USER]
-	    | <deterministic> = [NOT DETERMINISTIC|DETERMINISTIC]
+        <procedure_properties> ::=
+	    <authid> = AUTHID {DEFINER | OWNER | CALLER | CURRENT_USER} |
+	    <deterministic> = [NOT DETERMINISTIC | DETERMINISTIC]
+        <lang> ::=
+	    LANGUAGE JAVA <java_call_specification> |
+	    [LANGUAGE PLCSQL] [ <seq_of_declare_specs> ] <body>
         <java_call_specification> ::= NAME 'java_method_name (java_type [,java_type]...) [return java_type]'
 
 *   *function_name*: 생성할 저장 함수의 이름을 지정한다(최대 254바이트).
 *   *parameter_name*: 인자의 이름을 지정한다(최대 254바이트).
 *   *sql_type*: 인자 또는 리턴 값의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
 *   *param_comment_string*: 인자 커멘트 문자열을 지정한다.
-*   *authid*: 저장 함수의 실행 권한을 지정한다. 기본값은 AUTHID OWNER이다.
+*   *authid*: 저장 함수의 실행 권한을 지정한다. DEFINER(OWNER)는 함수를 정의한 사용자(소유자)의 권한으로 함수를 실행한다. CURRENT_USER(CALLER)는 함수를 호출한 사용자의 권한으로 함수를 실행한다. 기본값은 DEFINER(OWNER)이다. Java SP는 DEFINER 권한과 CURRENT_USER 권한으로 실행된다. PL/CSQL은 DEFINER 권한으로만 실행된다.
 *   *deterministic*: 하나의 질의내에서 동일 인자값에 대해 저장 함수 결과가 항상 동일한 값을 반환하는 함수인지 여부를 표현하는 것으로, DETERMINISTIC으로 설정된 저장 함수를 상관 부질의 사용시, 질의 최적화기는 해당 함수를 부질의 결과 캐시 최적화의 대상으로 처리한다. 기본값은 NOT DETERMINISTIC이다.
 *   *sp_comment_string*: 저장 함수의 커멘트 문자열을 지정한다.
 *   *java_method_name*: 자바의 클래스 이름을 포함하여 자바의 메소드 이름을 지정한다.
@@ -220,8 +225,12 @@ Java Call Specification 작성 방법에 대해서는 :ref:`call-specification`\
 CREATE FUNCTION DETERMINISTIC
 ------------------------------------------
 
-저장 함수 생성 시 DETERMINISTIC 키워드를 명시할 수 있다.
-DETERMINISTIC 키워드를 사용한 저장 함수를 상관 부질의에서 사용할 경우, 부질의 결과를 캐시하여 성능을 최적화할 수 있다.
+NOT DETERMINISTIC 키워드는 저장 함수가 동일한 입력값에 대해 다른 결과를 반환하는 함수이다.
+NOT DETERMINISTIC으로 설정된 함수는 최적화 및 캐싱 대상에서 제외되며, 매 호출 시 결과가 재계산된다.
+기본값은 NOT DETERMINISTIC이다.
+
+DETERMINISTIC 키워드는 저장 함수가 동일한 입력값에 대해 항상 동일한 결과를 반환하는 함수이다. 
+DETERMINISTIC으로 설정된 함수는 상관 부질의(correlated subquery) 사용 시, 질의 최적화기가 해당 함수를 부질의 결과 캐시 최적화의 대상으로 처리한다.
 
 상관 부질의 캐시 동작 방식에 대한 자세한 내용은 :ref:`correlated-subquery-cache`\을 참고한다.
 
