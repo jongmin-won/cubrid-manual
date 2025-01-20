@@ -1,6 +1,6 @@
 
-:meta-keywords: procedure definition, create procedure, drop procedure, function definition, create function, drop function
-:meta-description: Define functions/procedures in CUBRID database using create procedure, create function, drop procedure and drop function statements.
+:meta-keywords: procedure definition, create procedure, alter procedure, drop procedure, function definition, create function, alter function, drop function
+:meta-description: Define functions/procedures in CUBRID database using create procedure, create function, alter procedure, alter function, drop procedure and drop function statements.
 
 
 *************************
@@ -19,10 +19,14 @@ CREATE PROCEDURE
 ::
 
     CREATE [OR REPLACE] PROCEDURE [schema_name.]procedure_name [(<parameter_definition> [, <parameter_definition>] ...)]
-    {IS | AS} LANGUAGE <lang> <body> <comment>;
-    
+    [<authid>] {IS | AS} <lang>
+    [COMMENT 'sp_comment_string'];	
+
         <parameter_definition> ::= parameter_name [IN|OUT|IN OUT|INOUT] sql_type [COMMENT 'param_comment_string']
-        <lang> ::= [PLCSQL|JAVA|]
+        <authid> ::= AUTHID {DEFINER | OWNER | CALLER | CURRENT_USER}
+        <lang> ::=
+	    LANGUAGE JAVA <java_call_specification> |
+	    [LANGUAGE PLCSQL] [ <seq_of_declare_specs> ] <body>
         <java_call_specification> ::= NAME 'java_method_name (java_type [,java_type]...) [return java_type]'
 
 *   *schema_name*: 스키마 이름을 지정한다(최대 31바이트). 생략하면 현재 세션의 스키마 이름을 사용한다.
@@ -30,6 +34,7 @@ CREATE PROCEDURE
 *   *parameter_name*: 인자의 이름을 지정한다(최대 254바이트).
 *   *sql_type*: 인자의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
 *   *param_comment_string*: 인자 커멘트 문자열을 지정한다.
+*   *authid*: 저장 프로시저의 실행 권한을 지정한다. DEFINER(OWNER)는 프로시저를 정의한 사용자(소유자)의 권한으로 프로시저를 실행한다. CURRENT_USER(CALLER)는 프로시저를 호출한 사용자의 권한으로 프로시저를 실행한다. 기본값은 DEFINER(OWNER)이다. Java SP는 DEFINER 권한과 CURRENT_USER 권한으로 실행된다. PL/CSQL은 DEFINER 권한으로만 실행된다.
 *   *sp_comment_string*: 저장 프로시저의 커멘트 문자열을 지정한다.
 *   *java_method_name*: 자바의 클래스 이름을 포함하여 자바의 메소드 이름을 지정한다.
 *   *java_type*: 자바의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
@@ -101,6 +106,81 @@ Java Call Specification 작성 방법에 대해서는 :ref:`call-specification`\
      'athlete_add'         'DBA'                 NULL                            3  'event'               'STRING'              'IN'                  'NO'                  NULL                  NULL
 
 
+ALTER PROCEDURE
+================
+
+**ALTER PROCEDURE** 문을 사용하여 저장 프로시저를 재컴파일할 수 있다.
+저장 프로시저와 연관된 테이블의 스키마가 변경되더라도 자동으로 재컴파일되지 않으므로, 변경 사항을 반영하려면 사용자가 직접 재컴파일해야 한다.
+
+::
+
+    ALTER PROCEDURE [schema_name.]procedure_name COMPILE;
+
+*   *schema_name*: 스키마 이름을 지정한다. 생략하면 현재 세션의 스키마 이름을 사용한다.
+*   *procedure_name*: 재컴파일할 프로시저의 이름을 지정한다.
+
+.. note::
+
+    소유자를 변경하는 경우, 변경된 소유자로 저장 프로시저를 자동으로 재컴파일한다. 
+    소유자를 변경하기 위해서는 :ref:`ALTER … OWNER<change-owner>`\을 참고한다.
+
+다음은 테이블 스키마 변경 후 PL/CSQL을 재컴파일하여 정상적으로 실행할 수 있게 만드는 예이다.  
+
+PL/CSQL에 Static SQL을 사용하는 저장 프로시저를 생성한 후 정상적으로 실행되는지 확인한다. 
+
+.. code-block:: sql
+
+    CREATE OR REPLACE PROCEDURE proc_stadium_code() AS
+      n INTEGER;
+    BEGIN
+      SELECT code INTO n FROM stadium LIMIT 1;
+      DBMS_OUTPUT.put_line('code :' || n);
+    END;
+    
+    ;server-output on
+    CALL proc_stadium_code();
+::
+    
+    Result              
+    ======================
+      NULL                
+
+    <DBMS_OUTPUT>
+    ====
+    code :30140
+
+stadium 테이블의 code 컬럼 타입을 INTEGER에서 VARCHAR로 변경한 후 저장 프로시저를 실행하면 아래와 같은 에러가 발생한다.
+
+.. code-block:: sql
+
+    ALTER TABLE public.stadium MODIFY code VARCHAR;
+
+    CALL proc_stadium_code();
+
+::
+
+    ERROR: Stored procedure execute error: 
+      (line 4, column 3) internal server error
+
+컬럼 타입 변경 정보가 기존에 컴파일된 PL/CSQL의 실행코드에 반영되지 않았기 때문에, 저장 프로시저를 재컴파일해야 정상적으로 실행할 수 있다.
+
+.. code-block:: sql
+
+    ALTER PROCEDURE proc_stadium_code COMPILE;
+
+    CALL proc_stadium_code();
+
+::
+
+    Result              
+    ======================
+      NULL                
+
+    <DBMS_OUTPUT>
+    ====
+    code :30140
+
+
 DROP PROCEDURE
 ==============
 
@@ -109,7 +189,7 @@ CUBRID에서는 등록한 저장 프로시저를 **DROP PROCEDURE** 구문을 �
 
 ::
 
-    DROP PROCEDURE [schema_name.]procedure_name [{ , [schema_name.]procedure_name , ... }]
+    DROP PROCEDURE [schema_name.]procedure_name [{ , [schema_name.]procedure_name , ... }];
 
 *   *schema_name*: 스키마 이름을 지정한다. 생략하면 현재 세션의 스키마 이름을 사용한다.
 *   *procedure_name*: 제거할 프로시저의 이름을 지정한다.
@@ -133,10 +213,16 @@ CUBRID는 Java를 제외한 다른 언어에서는 저장 함수를 지원하지
 ::
 
     CREATE [OR REPLACE] FUNCTION [schema_name.]function_name [(<parameter_definition> [, <parameter_definition>] ...)] RETURN sql_type
-    {IS | AS} LANGUAGE JAVA <java_call_specification>
-    COMMENT 'sp_comment_string';
-    
+    [<procedure_properties>] {IS | AS} <lang>
+    [COMMENT 'sp_comment_string'];
+
         <parameter_definition> ::= parameter_name [IN|OUT|IN OUT|INOUT] sql_type [COMMENT 'param_comment_string']
+        <procedure_properties> ::=
+	    <authid> = AUTHID {DEFINER | OWNER | CALLER | CURRENT_USER} |
+	    <deterministic> = [NOT DETERMINISTIC | DETERMINISTIC]
+        <lang> ::=
+	    LANGUAGE JAVA <java_call_specification> |
+	    [LANGUAGE PLCSQL] [ <seq_of_declare_specs> ] <body>
         <java_call_specification> ::= NAME 'java_method_name (java_type [,java_type]...) [return java_type]'
 
 *   *schema_name*: 스키마 이름을 지정한다(최대 31바이트). 생략하면 현재 세션의 스키마 이름을 사용한다.
@@ -144,7 +230,9 @@ CUBRID는 Java를 제외한 다른 언어에서는 저장 함수를 지원하지
 *   *parameter_name*: 인자의 이름을 지정한다(최대 254바이트).
 *   *sql_type*: 인자 또는 리턴 값의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
 *   *param_comment_string*: 인자 커멘트 문자열을 지정한다.
-*   *sp_comment_string*: 저장 프로시저의 커멘트 문자열을 지정한다.
+*   *authid*: 저장 함수의 실행 권한을 지정한다. DEFINER(OWNER)는 함수를 정의한 사용자(소유자)의 권한으로 함수를 실행한다. CURRENT_USER(CALLER)는 함수를 호출한 사용자의 권한으로 함수를 실행한다. 기본값은 DEFINER(OWNER)이다. Java SP는 DEFINER 권한과 CURRENT_USER 권한으로 실행된다. PL/CSQL은 DEFINER 권한으로만 실행된다.
+*   *deterministic*: 하나의 질의내에서 동일 인자값에 대해 저장 함수 결과가 항상 동일한 값을 반환하는 함수인지 여부를 표현하는 것으로, DETERMINISTIC으로 설정된 저장 함수를 상관 부질의 사용시, 질의 최적화기는 해당 함수를 부질의 결과 캐시 최적화의 대상으로 처리한다. 기본값은 NOT DETERMINISTIC이다.
+*   *sp_comment_string*: 저장 함수의 커멘트 문자열을 지정한다.
 *   *java_method_name*: 자바의 클래스 이름을 포함하여 자바의 메소드 이름을 지정한다.
 *   *java_type*: 자바의 데이터 타입을 지정한다. 지정할 수 있는 데이터 타입은 :ref:`jsp-type-mapping`\을 참고한다.
 
@@ -210,6 +298,166 @@ Java Call Specification 작성 방법에 대해서는 :ref:`call-specification`\
     sp_name               owner_name            pkg_name                 index_of  arg_name              data_type             mode                  is_optional           default_value         comment           
     =======================================================================================================================================================================================================
      'sp_int'              'DBA'                 NULL                            0  'i'                   'INTEGER'             'IN'                  'NO'                  NULL                  NULL    
+
+
+CREATE FUNCTION DETERMINISTIC
+------------------------------------------
+
+NOT DETERMINISTIC 키워드는 저장 함수가 동일한 입력값에 대해 다른 결과를 반환하는 함수이다.
+NOT DETERMINISTIC으로 설정된 함수는 부질의 결과 캐시 최적화의 대상에서 제외되며, 매 호출 시 결과가 재계산된다.
+기본값은 NOT DETERMINISTIC이다.
+
+DETERMINISTIC 키워드는 저장 함수가 동일한 입력값에 대해 항상 동일한 결과를 반환하는 함수이다. 
+DETERMINISTIC으로 설정된 함수는 상관 부질의(correlated subquery) 사용 시, 질의 최적화기가 해당 함수를 부질의 결과 캐시 최적화의 대상으로 처리한다.
+
+상관 부질의 캐시 동작 방식에 대한 자세한 내용은 :ref:`correlated-subquery-cache`\을 참고한다.
+
+다음은 DETERMINISTIC을 사용한 저장 함수의 예시이다. 이 예시에서는 상관 부질의를 사용할 때 결과를 캐시하여 성능을 최적화하는 과정을 보여준다.
+
+.. code-block:: sql
+
+    CREATE TABLE dummy_tbl (col1 INTEGER);
+    INSERT INTO dummy_tbl VALUES (1), (2), (1), (2);
+
+    CREATE OR REPLACE FUNCTION pl_csql_not_deterministic (n INTEGER) RETURN INTEGER AS
+    BEGIN
+      return n + 1;
+    END;
+
+    CREATE OR REPLACE FUNCTION pl_csql_deterministic (n INTEGER) RETURN INTEGER DETERMINISTIC AS
+    BEGIN
+      return n + 1;
+    END;
+
+    SELECT sp_name, owner, sp_type, is_deterministic from db_stored_procedure;
+
+::
+    
+    sp_name                      owner           sp_type               is_deterministic    
+ ========================================================================================
+    'pl_csql_not_deterministic'  'DBA'           'FUNCTION'            'NO'                
+    'pl_csql_deterministic'      'DBA'           'FUNCTION'            'YES' 
+
+위 예시에서 pl_csql_not_deterministic 함수는 NOT DETERMINISTIC이므로 상관 부질의에서 캐시를 사용하지 않는다.
+반면, pl_csql_deterministic 함수는 DETERMINISTIC 키워드가 지정되어 있으므로 상관 부질의 결과를 캐시하여 성능을 최적화할 수 있다.
+
+.. code-block:: sql
+    
+    ;trace on
+    SELECT (SELECT pl_csql_not_deterministic (t1.col1) FROM dual) AS results FROM dummy_tbl t1;
+
+::
+
+      results
+ =============
+            2
+            3
+            2
+            3
+ 
+ === Auto Trace ===
+    ...
+    Trace Statistics:
+      SELECT (time: 3, fetch: 44, fetch_time: 0, ioread: 0)
+        SCAN (table: dba.dummy_tbl), (heap time: 0, fetch: 20, ioread: 0, readrows: 4, rows: 4)
+        SUBQUERY (correlated)
+          SELECT (time: 3, fetch: 24, fetch_time: 0, ioread: 0)
+            SCAN (table: dual), (heap time: 0, fetch: 16, ioread: 0, readrows: 4, rows: 4)
+
+pl_csql_not_deterministic 함수는 NOT DETERMINISTIC이므로 부질의 결과를 캐시하지 않는다.
+
+.. code-block:: sql
+    
+    ;trace on
+    SELECT (SELECT pl_csql_deterministic (t1.col1) FROM dual) AS results FROM dummy_tbl t1;
+
+::
+
+      results
+ =============
+            2
+            3
+            2
+            3
+
+ === Auto Trace ===
+    ...
+    Trace Statistics:
+      SELECT (time: 3, fetch: 36, fetch_time: 0, ioread: 0)
+        SCAN (table: dba.dummy_tbl), (heap time: 0, fetch: 20, ioread: 0, readrows: 4, rows: 4)
+        SUBQUERY (correlated)
+          SELECT (time: 3, fetch: 16, fetch_time: 0, ioread: 0)
+            SCAN (table: dual), (heap time: 0, fetch: 8, ioread: 0, readrows: 2, rows: 2)
+            SUBQUERY_CACHE (hit: 2, miss: 2, size: 150808, status: enabled)
+
+pl_csql_deterministic 함수의 Trace 결과에서는 SUBQUERY_CACHE 항목이 표시되며(hit: 2, miss: 2, size: 150808, status: enabled), 첫 번째 결과 (2), (3)은 캐시에서 miss되었고, 이후 동일한 결과부터는 캐시에서 hit된 것을 확인할 수 있다.
+
+
+ALTER FUNCTION
+===============
+
+**ALTER FUNCTION** 문을 사용하여 저장 함수를 재컴파일할 수 있다.
+저장 함수와 연관된 테이블의 스키마가 변경되더라도 자동으로 재컴파일되지 않으므로, 변경 사항을 반영하려면 사용자가 직접 재컴파일해야 한다.
+
+::
+
+    ALTER FUNCTION [schema_name.]function_name COMPILE;
+
+*   *schema_name*: 스키마 이름을 지정한다. 생략하면 현재 세션의 스키마 이름을 사용한다.
+*   *function_name*: 재컴파일할 함수의 이름을 지정한다.
+
+.. note::
+
+    소유자를 변경하는 경우, 변경된 소유자로 저장 함수를 자동으로 재컴파일한다.
+    소유자를 변경하기 위해서는 :ref:`ALTER … OWNER<change-owner>`\을 참고한다.
+
+다음은 테이블 스키마 변경 후 PL/CSQL을 재컴파일하여 정상적으로 실행할 수 있게 만드는 예이다. 
+
+PL/CSQL에 Static SQL을 사용하는 저장 함수를 생성한 후 정상적으로 실행되는지 확인한다.
+
+.. code-block:: sql
+
+    CREATE OR REPLACE FUNCTION func_stadium_code() RETURN INTEGER AS
+      n INTEGER;
+    BEGIN
+      SELECT code INTO n FROM stadium LIMIT 1;
+      RETURN n;
+    END;
+    
+    CALL func_stadium_code();
+
+::
+    
+    Result
+    =============
+    30140
+
+stadium 테이블의 code 컬럼 타입을 INTEGER에서 VARCHAR로 변경한 후 저장 함수를 실행하면 아래와 같은 에러가 발생한다.
+
+.. code-block:: sql
+
+    ALTER TABLE public.stadium MODIFY code VARCHAR;
+
+    CALL func_stadium_code();
+
+::
+
+    ERROR: Stored procedure execute error: 
+      (line 4, column 3) internal server error
+
+컬럼 타입 변경 정보가 기존에 컴파일된 PL/CSQL의 실행코드에 반영되지 않았기 때문에, 저장 함수를 재컴파일을 수행해야 정상적으로 실행할 수 있다.
+
+.. code-block:: sql
+
+    ALTER FUNCTION func_stadium_code COMPILE;
+
+    CALL func_stadium_code();
+
+::
+    
+    Result
+    =============
+    30140
 
 
 DROP FUNCTION
